@@ -9,7 +9,11 @@
 #import <UIKit/UIKit.h>
 
 NS_ASSUME_NONNULL_BEGIN
-
+typedef NS_ENUM(NSUInteger, PMDScrollType) {
+    PMDScrollTypeDefault = 0,
+    PMDScrollTypeMiddleToLeft,
+    PMDScrollTypeRightToLeft,
+};
 @interface PmdView : UIView
 ///font
 @property(nonatomic,strong)UIFont *font;
@@ -21,8 +25,12 @@ NS_ASSUME_NONNULL_BEGIN
 @property(nonatomic,assign)CGFloat speed;
 ///间隔,默认20
 @property(nonatomic,assign)CGFloat space;
+///滚动方式
+@property(nonatomic,assign)PMDScrollType scrollType;
 -(void)startMarquee;
 -(void)stopMarquee;
+///点击回调
+@property(nonatomic,copy)void(^clickClosure)(NSInteger idx,NSString *content);
 @end
 
 NS_ASSUME_NONNULL_END

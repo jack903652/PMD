@@ -18,6 +18,8 @@ static CGFloat speed = 0.5;
 @property(nonatomic,copy)NSArray<NSNumber*> *widths;
 ///总长
 @property(nonatomic,assign)CGFloat totalWidth;
+///是否有空的占位字符,修改了数据源,方便点击的时候取到正确的idx和content
+@property(nonatomic,assign)BOOL hasPlaceholder;
 @end
 @implementation PmdView
 
@@ -26,6 +28,9 @@ static CGFloat speed = 0.5;
     if (self) {
         self.speed = speed;
         self.space = 20;
+        self.font = [UIFont systemFontOfSize:14];
+        self.textColor = [UIColor blackColor];
+        self.scrollType = PMDScrollTypeDefault;
         UICollectionViewFlowLayout *layout = [[UICollectionViewFlowLayout alloc] init];
         layout.minimumInteritemSpacing = 0;
         layout.minimumLineSpacing = 0;
@@ -42,15 +47,32 @@ static CGFloat speed = 0.5;
         _collectionView.dataSource = self;
         [_collectionView registerClass:[PmdCell class] forCellWithReuseIdentifier:@"PmdCell"];
         _collectionView.backgroundColor = [UIColor clearColor];
-        _font = [UIFont systemFontOfSize:14];
-        _textColor = [UIColor blackColor];
+
         _totalWidth = 0;
     }
     return self;
 }
 -(void)setDataSource:(NSArray *)dataSource{
     [self layoutIfNeeded];
-    CGFloat space_width = CGRectGetWidth(self.frame)/2 - self.space/*多个间隔*/;
+    CGFloat from = 0;
+    switch (self.scrollType) {
+        case PMDScrollTypeDefault:
+            from = self.space;
+        break;
+            
+        case PMDScrollTypeMiddleToLeft:
+            from = CGRectGetWidth(self.frame)/2;
+        break;
+            
+        case PMDScrollTypeRightToLeft:
+            from = CGRectGetWidth(self.frame);
+            break;
+            
+        default:
+            from = 0;
+            break;
+    }
+    CGFloat space_width = from - self.space/*多个间隔*/;
     CGFloat tWidth = [@" " sizeWithAttributes:@{NSFontAttributeName:self.font}].width;
     NSInteger n = ceil(space_width/tWidth);
     NSMutableString *string = [NSMutableString string];
@@ -59,7 +81,10 @@ static CGFloat speed = 0.5;
     }
     _totalWidth = 0;
     NSMutableArray <NSString *>*arr =[NSMutableArray arrayWithArray:dataSource];
-    [arr insertObject:string atIndex:0];
+    if (string.length > 0) {
+        self.hasPlaceholder = YES;
+        [arr insertObject:string atIndex:0];
+    }
     NSMutableArray <NSNumber *>*temp = [NSMutableArray array];
     for (int i = 0; i<arr.count; i++) {
         CGFloat width = [arr[i] sizeWithAttributes:@{NSFontAttributeName:self.font}].width;
@@ -118,15 +143,18 @@ static CGFloat speed = 0.5;
 -(void)startMarquee{
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
         [self stopMarquee];
-//        if (self.collectionView.contentOffset.x == 0) {
-//            self.collectionView.contentOffset = CGPointMake(-pmd_screen_width/2, 0);//从中间开始滚动
-//        }
         self.marqueeDisplayLink = [CADisplayLink displayLinkWithTarget:self selector:@selector(processMarquee)];
         [self.marqueeDisplayLink addToRunLoop:NSRunLoop.mainRunLoop forMode:NSRunLoopCommonModes];
     });
 
 }
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath{
-    
+    if (self.clickClosure) {
+        NSString *content = self.dataSource[indexPath.item];
+        content = [content stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]];
+        if (content.length > 0) {
+            self.clickClosure(indexPath.item -1, content);
+        }
+    }
 }
 @end
