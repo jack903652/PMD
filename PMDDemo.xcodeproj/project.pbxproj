@@ -83,8 +83,8 @@
 			isa = PBXGroup;
 			children = (
 				3990ACAC21D3214500DC3F6F /* PmdView.h */,
-				3990ACAD21D3214500DC3F6F /* PmdCell.h */,
 				3990ACAE21D3214500DC3F6F /* PmdView.m */,
+				3990ACAD21D3214500DC3F6F /* PmdCell.h */,
 				3990ACAF21D3214500DC3F6F /* PmdCell.m */,
 			);
 			path = pmd;
